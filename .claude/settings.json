@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npm ping *)",
+      "Bash(curl -sI https://registry.npmjs.org/next)",
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias \"@/*\" --no-turbopack --use-npm)"
+    ]
+  }
+}
