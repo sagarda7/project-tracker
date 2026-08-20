@@ -1,0 +1,3 @@
+name,province,district,municipality,ward,locationDescription,contractorName,contractorPhone,contactPersonName,contactPersonPhone,governingBody,status,budget,startDate,deadline,description
+Sample Road Upgrade Project,Bagmati,Kathmandu,Kathmandu Metropolitan City,10,Near central market,Himalayan Builders Pvt. Ltd.,9841000001,Hari Prasad Koirala,9801234567,METROPOLITAN_CITY,PLANNED,5000000,2026-01-15,2026-12-31,Upgrade of the main road including drainage work.
+Sample Water Supply Project,Gandaki,Kaski,Pokhara Metropolitan City,6,Lakeside area,Gandaki Infra Works,9846000002,Sunita Gurung,9846123456,MUNICIPALITY,STARTED,3200000,2026-02-01,2026-11-30,Installation of new water supply pipelines.
