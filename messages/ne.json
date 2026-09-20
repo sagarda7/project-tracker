@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "ड्यासबोर्ड",
     "projects": "आयोजनाहरू",
+    "complaints": "गुनासो",
     "contractors": "ठेकेदारहरू",
     "users": "प्रयोगकर्ताहरू",
     "settings": "सेटिङहरू",
@@ -160,6 +161,24 @@
     "deleteConfirmTitle": "यो टिप्पणी मेटाउने हो?",
     "deleteConfirmMessage": "यो फलोअप टिप्पणी स्थायी रूपमा हटाइनेछ।"
   },
+  "complaints": {
+    "title": "गुनासो",
+    "complaintDetails": "गुनासो विवरण",
+    "trackingCode": "ट्र्याकिङ कोड",
+    "complainantName": "उजुरीकर्ताको नाम",
+    "description": "गुनासोको विवरण",
+    "address": "ठेगाना",
+    "updateStatus": "स्थिति अद्यावधिक गर्नुहोस्",
+    "statusComment": "टिप्पणी (वैकल्पिक)",
+    "notes": "गुनासो टिप्पणीहरू",
+    "addNote": "टिप्पणी थप्नुहोस्",
+    "noNotes": "अहिलेसम्म कुनै टिप्पणी छैन।",
+    "noComplaints": "कुनै गुनासो फेला परेन।",
+    "attachments": "संलग्न फाइलहरू",
+    "photos": "तस्बिरहरू",
+    "documents": "कागजातहरू",
+    "searchPlaceholder": "नाम वा ट्र्याकिङ कोडद्वारा खोज्नुहोस्"
+  },
   "profile": {
     "title": "प्रोफाइल",
     "changePassword": "पासवर्ड परिवर्तन गर्नुहोस्",
@@ -194,6 +213,13 @@
     "CANCELED": "रद्द गरिएको",
     "COMPLETED": "सम्पन्न",
     "HANDOVER": "हस्तान्तरण"
+  },
+  "complaintStatus": {
+    "PENDING": "पेन्डिङ",
+    "ACCEPTED": "स्वीकृत",
+    "IN_ACTION": "कारबाहीमा",
+    "FORWARDED": "फर्वार्ड गरिएको",
+    "RESOLVED": "समाधान भयो"
   },
   "governingBody": {
     "METROPOLITAN_CITY": "महानगरपालिका",

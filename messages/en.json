@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "projects": "Projects",
+    "complaints": "Gunaso",
     "contractors": "Contractors",
     "users": "Users",
     "settings": "Settings",
@@ -160,6 +161,24 @@
     "deleteConfirmTitle": "Delete this note?",
     "deleteConfirmMessage": "This follow-up note will be permanently removed."
   },
+  "complaints": {
+    "title": "Gunaso",
+    "complaintDetails": "Complaint Details",
+    "trackingCode": "Tracking Code",
+    "complainantName": "Complainant Name",
+    "description": "Complaint Description",
+    "address": "Address",
+    "updateStatus": "Update Status",
+    "statusComment": "Comment (optional)",
+    "notes": "Complaint Notes",
+    "addNote": "Add Note",
+    "noNotes": "No complaint notes yet.",
+    "noComplaints": "No complaints found.",
+    "attachments": "Attachments",
+    "photos": "Photos",
+    "documents": "Documents",
+    "searchPlaceholder": "Search by name or tracking code"
+  },
   "profile": {
     "title": "Profile",
     "changePassword": "Change Password",
@@ -194,6 +213,13 @@
     "CANCELED": "Canceled",
     "COMPLETED": "Completed",
     "HANDOVER": "Handover"
+  },
+  "complaintStatus": {
+    "PENDING": "Pending",
+    "ACCEPTED": "Accepted",
+    "IN_ACTION": "In Action",
+    "FORWARDED": "Forwarded",
+    "RESOLVED": "Resolved"
   },
   "governingBody": {
     "METROPOLITAN_CITY": "Metropolitan City",

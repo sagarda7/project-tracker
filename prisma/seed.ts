@@ -346,6 +346,101 @@ async function main() {
     });
   }
 
+  const complaintsData: Array<{
+    trackingCode: string;
+    name: string;
+    phone: string;
+    description: string;
+    province: string;
+    district: string;
+    municipality: string;
+    ward: string;
+    addressDetail?: string;
+    status: "PENDING" | "ACCEPTED" | "IN_ACTION" | "FORWARDED" | "RESOLVED";
+    daysAgo: number;
+    note?: string;
+  }> = [
+    {
+      trackingCode: "B7K3M",
+      name: "Sita Poudel",
+      phone: "9841122233",
+      description: "Ring road construction near our house has blocked the drainage, causing waterlogging every monsoon.",
+      province: "Koshi",
+      district: "Morang",
+      municipality: "Biratnagar Metropolitan City",
+      ward: "5",
+      addressDetail: "Near Traffic Chowk",
+      status: "IN_ACTION",
+      daysAgo: 12,
+      note: "Site inspection scheduled with the ward engineer.",
+    },
+    {
+      trackingCode: "X9P2Q",
+      name: "Ramesh Karki",
+      phone: "9812233445",
+      description: "The contractor working on the water supply extension left an open trench unmarked on our street, which is a safety hazard at night.",
+      province: "Koshi",
+      district: "Sunsari",
+      municipality: "Itahari Sub-Metropolitan City",
+      ward: "12",
+      status: "PENDING",
+      daysAgo: 2,
+    },
+    {
+      trackingCode: "L4T8N",
+      name: "Gita Tamang",
+      phone: "9846001122",
+      description: "The footpath reconstruction near New Road used substandard paving stones that are already cracking.",
+      province: "Bagmati",
+      district: "Kathmandu",
+      municipality: "Kathmandu Metropolitan City",
+      ward: "10",
+      status: "RESOLVED",
+      daysAgo: 40,
+      note: "Contractor replaced the cracked paving stones. Issue resolved and verified on site.",
+    },
+  ];
+
+  for (const c of complaintsData) {
+    const existing = await prisma.complaint.findUnique({ where: { trackingCode: c.trackingCode } });
+    if (existing) continue;
+
+    const createdAt = daysFromNow(-c.daysAgo);
+    const complaint = await prisma.complaint.create({
+      data: {
+        trackingCode: c.trackingCode,
+        name: c.name,
+        phone: c.phone,
+        description: c.description,
+        province: c.province,
+        district: c.district,
+        municipality: c.municipality,
+        ward: c.ward,
+        addressDetail: c.addressDetail,
+        status: c.status,
+        createdAt,
+      },
+    });
+
+    if (c.status !== "PENDING") {
+      await prisma.complaintStatusHistory.create({
+        data: {
+          complaintId: complaint.id,
+          previousStatus: "PENDING",
+          newStatus: c.status,
+          changedById: admin.id,
+          comment: "Status updated after review.",
+        },
+      });
+    }
+
+    if (c.note) {
+      await prisma.complaintNote.create({
+        data: { complaintId: complaint.id, note: c.note, createdById: admin.id },
+      });
+    }
+  }
+
   console.log("Seed complete.");
   console.log("Admin login: admin@example.com / admin123");
   console.log("User login:  user@example.com / user123");

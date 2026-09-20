@@ -1,0 +1,29 @@
+name: rspchitwan-production
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/production/Dockerfile
+    image: rspchitwan-prod
+    container_name: rspchitwan_prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    ports:
+      - "3001:3000"
+    volumes:
+      - uploads_data:/app/public/uploads
+    networks:
+      - shared_network
+
+volumes:
+  uploads_data:
+
+networks:
+  shared_network:
+    external: true
+    # Run `docker network ls` on the server and put the real name of the network
+    # your mariadb/wordpress stack created into SHARED_NETWORK_NAME in .env.production.
+    # It's whatever that other compose project's name is + "_shared_network".
+    name: ${SHARED_NETWORK_NAME}

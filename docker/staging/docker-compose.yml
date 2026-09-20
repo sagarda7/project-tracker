@@ -1,0 +1,26 @@
+name: rspchitwan-staging
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/staging/Dockerfile
+    image: rspchitwan-staging
+    container_name: rspchitwan_staging
+    restart: unless-stopped
+    env_file:
+      - .env.staging
+    ports:
+      - "3002:3000"
+    volumes:
+      - uploads_data:/app/public/uploads
+    networks:
+      - shared_network
+
+volumes:
+  uploads_data:
+
+networks:
+  shared_network:
+    external: true
+    name: ${SHARED_NETWORK_NAME}

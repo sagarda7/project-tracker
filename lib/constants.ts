@@ -1,4 +1,4 @@
-import { GoverningBody, ProjectStatus, Role, Language } from "@prisma/client";
+import { GoverningBody, ProjectStatus, Role, Language, ComplaintStatus } from "@prisma/client";
 
 export const PROJECT_STATUSES: ProjectStatus[] = [
   "PLANNED",
@@ -55,7 +55,49 @@ export const LANGUAGES: Language[] = ["EN", "NE"];
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+export const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const ALLOWED_DOCUMENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
 export const PAGE_SIZE = 10;
+
+export const COMPLAINT_STATUSES: ComplaintStatus[] = [
+  "PENDING",
+  "ACCEPTED",
+  "IN_ACTION",
+  "FORWARDED",
+  "RESOLVED",
+];
+
+export const COMPLAINT_STATUS_BADGE_CLASSES: Record<ComplaintStatus, string> = {
+  PENDING: "bg-gray-100 text-gray-700 border-gray-200",
+  ACCEPTED: "bg-sky-100 text-sky-700 border-sky-200",
+  IN_ACTION: "bg-blue-100 text-blue-700 border-blue-200",
+  FORWARDED: "bg-purple-100 text-purple-700 border-purple-200",
+  RESOLVED: "bg-green-100 text-green-700 border-green-200",
+};
+
+export const COMPLAINT_STATUS_LABELS_NE: Record<ComplaintStatus, string> = {
+  PENDING: "पेन्डिङ",
+  ACCEPTED: "स्वीकृत",
+  IN_ACTION: "कारबाहीमा",
+  FORWARDED: "फर्वार्ड गरिएको",
+  RESOLVED: "समाधान भयो",
+};
+
+export const COMPLAINT_STATUS_LABELS_EN: Record<ComplaintStatus, string> = {
+  PENDING: "Pending",
+  ACCEPTED: "Accepted",
+  IN_ACTION: "In Action",
+  FORWARDED: "Forwarded",
+  RESOLVED: "Resolved",
+};
 
 export function isOverdue(
   deadline: Date | string | null,

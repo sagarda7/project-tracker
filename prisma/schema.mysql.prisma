@@ -1,9 +1,19 @@
+// Production schema (MySQL). Mirrors prisma/schema.prisma (SQLite, used for local dev) —
+// keep both in sync when models change. The only real differences are the datasource
+// provider and `@db.Text` on free-form fields that could exceed MySQL's default
+// VARCHAR(191) length. See README "Docker Deployment" for why two schema files exist:
+// Prisma's datasource `provider` must be a literal, so one schema can't target both
+// SQLite and MySQL.
+
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local/dev use of this schema; the musl target is what the
+  // Alpine-based Docker runtime (docker/production, docker/staging) actually needs.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -76,9 +86,9 @@ model Contractor {
   phone         String
   alternatePhone String?
   email         String?
-  address       String?
+  address       String?  @db.Text
   contactPerson String?
-  notes         String?
+  notes         String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -95,7 +105,7 @@ model Project {
   district             String
   municipality         String
   ward                 String
-  locationDescription  String?
+  locationDescription  String?       @db.Text
   contractorId         String?
   contractorName       String?
   contractorPhone      String?
@@ -106,7 +116,7 @@ model Project {
   budget               Float
   startDate            DateTime?
   deadline             DateTime?
-  description          String?
+  description          String?       @db.Text
 
   createdById String
   createdAt   DateTime @default(now())
@@ -145,7 +155,7 @@ model ProjectImage {
 model ProjectFollowupNote {
   id               String   @id @default(cuid())
   projectId        String
-  note             String
+  note             String    @db.Text
   followupDate     DateTime?
   proofImagePath   String?
   externalLink     String?
@@ -166,7 +176,7 @@ model ProjectStatusHistory {
   previousStatus ProjectStatus?
   newStatus     ProjectStatus
   changedById   String
-  comment       String?
+  comment       String?       @db.Text
   changedAt     DateTime      @default(now())
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -183,7 +193,7 @@ model CsvImportLog {
   totalRows     Int
   successCount  Int
   errorCount    Int
-  errors        String?
+  errors        String?  @db.Text
   createdById   String
   createdAt     DateTime @default(now())
 
@@ -198,12 +208,12 @@ model Complaint {
   trackingCode  String          @unique
   name          String
   phone         String?
-  description   String
+  description   String          @db.Text
   province      String
   district      String
   municipality  String
   ward          String
-  addressDetail String?
+  addressDetail String?         @db.Text
   status        ComplaintStatus @default(PENDING)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -235,7 +245,7 @@ model ComplaintAttachment {
 model ComplaintNote {
   id          String   @id @default(cuid())
   complaintId String
-  note        String
+  note        String   @db.Text
   createdById String
   createdAt   DateTime @default(now())
 
@@ -251,7 +261,7 @@ model ComplaintStatusHistory {
   previousStatus ComplaintStatus?
   newStatus      ComplaintStatus
   changedById    String
-  comment        String?
+  comment        String?          @db.Text
   changedAt      DateTime         @default(now())
 
   complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
