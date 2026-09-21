@@ -4,40 +4,60 @@ import { FileText, Search, ShieldCheck, Clock } from "lucide-react";
 export default function PublicHomePage() {
   return (
     <div>
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
-          <div className="order-2 md:order-1">
-            <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
-              तपाईंको <span className="text-primary">गुनासो</span>, हाम्रो जिम्मेवारी
-            </h1>
-            <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg">
-              निर्माण आयोजनासँग सम्बन्धित कुनै समस्या वा गुनासो छ भने सजिलैसँग अनलाइन दर्ता गर्नुहोस् र
-              ट्र्याकिङ कोडको माध्यमबाट यसको प्रगति हेर्नुहोस्।
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/gunaso"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover"
-              >
-                <FileText className="h-4 w-4" />
-                गुनासो दर्ता गर्नुहोस्
-              </Link>
-              <Link
-                href="/gunaso/track"
-                className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <Search className="h-4 w-4" />
-                गुनासो ट्र्याक गर्नुहोस्
-              </Link>
+      <section className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-white">
+        {/* Faint bell watermark, decorative only */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/rsp-logo-icon.svg"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-10 h-72 w-72 opacity-[0.06]"
+        />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+          <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
+            <div className="order-1 flex justify-center md:justify-start">
+              <div className="relative w-full max-w-xs sm:max-w-sm">
+                {/* Blob sized/positioned relative to the photo itself so it stays tucked
+                    behind it at every viewport size, instead of a fixed-size shape that
+                    drifts away from the photo's actual silhouette. */}
+                <div
+                  aria-hidden
+                  className="absolute left-1/2 top-[38%] -z-10 h-[78%] w-[92%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/rsp_banner.svg"
+                  alt="राष्ट्रिय स्वतन्त्र पार्टी, चितवन"
+                  className="relative z-10 h-auto w-full"
+                />
+              </div>
             </div>
-          </div>
-          <div className="order-1 flex justify-center md:order-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/rsp_banner.svg"
-              alt="गुनासो प्रणाली"
-              className="h-auto w-full max-w-sm rounded-3xl"
-            />
+            <div className="order-2">
+              <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
+                तपाईंको <span className="text-primary">गुनासो</span>, हाम्रो जिम्मेवारी
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg">
+                निर्माण आयोजनासँग सम्बन्धित कुनै समस्या वा गुनासो छ भने सजिलैसँग अनलाइन दर्ता गर्नुहोस् र
+                ट्र्याकिङ कोडको माध्यमबाट यसको प्रगति हेर्नुहोस्।
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/gunaso"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover"
+                >
+                  <FileText className="h-4 w-4" />
+                  गुनासो दर्ता गर्नुहोस्
+                </Link>
+                <Link
+                  href="/gunaso/track"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <Search className="h-4 w-4" />
+                  गुनासो ट्र्याक गर्नुहोस्
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
