@@ -3,18 +3,34 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Overridable via env so a real deployment never has to ship with the well-known
+// admin@example.com/admin123 default. Only takes effect on first seed — an existing
+// user is never touched by reseeding (see the `update: {}` below), so changing these
+// after the account already exists does not change its email/password; use the app's
+// own "reset password" flow for that instead.
+const ADMIN_NAME = process.env.SEED_ADMIN_NAME ?? "System Administrator";
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "admin123";
+
+const USER_NAME = process.env.SEED_USER_NAME ?? "Field Engineer";
+const USER_EMAIL = process.env.SEED_USER_EMAIL ?? "user@example.com";
+const USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? "user123";
+
 async function main() {
   console.log("Seeding database...");
 
-  const adminPasswordHash = await bcrypt.hash("admin123", 10);
-  const userPasswordHash = await bcrypt.hash("user123", 10);
+  const adminAlreadyExisted = !!(await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } }));
+  const userAlreadyExisted = !!(await prisma.user.findUnique({ where: { email: USER_EMAIL } }));
+
+  const adminPasswordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  const userPasswordHash = await bcrypt.hash(USER_PASSWORD, 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: ADMIN_EMAIL },
     update: {},
     create: {
-      fullName: "System Administrator",
-      email: "admin@example.com",
+      fullName: ADMIN_NAME,
+      email: ADMIN_EMAIL,
       phone: "9800000001",
       passwordHash: adminPasswordHash,
       role: "ADMIN",
@@ -24,11 +40,11 @@ async function main() {
   });
 
   const user = await prisma.user.upsert({
-    where: { email: "user@example.com" },
+    where: { email: USER_EMAIL },
     update: {},
     create: {
-      fullName: "Field Engineer",
-      email: "user@example.com",
+      fullName: USER_NAME,
+      email: USER_EMAIL,
       phone: "9800000002",
       passwordHash: userPasswordHash,
       role: "USER",
@@ -442,8 +458,16 @@ async function main() {
   }
 
   console.log("Seed complete.");
-  console.log("Admin login: admin@example.com / admin123");
-  console.log("User login:  user@example.com / user123");
+  console.log(
+    adminAlreadyExisted
+      ? `Admin account already existed: ${ADMIN_EMAIL} (password unchanged by reseeding)`
+      : `Admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`
+  );
+  console.log(
+    userAlreadyExisted
+      ? `User account already existed: ${USER_EMAIL} (password unchanged by reseeding)`
+      : `User login:  ${USER_EMAIL} / ${USER_PASSWORD}`
+  );
 }
 
 main()
