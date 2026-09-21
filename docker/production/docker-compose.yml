@@ -11,7 +11,7 @@ services:
     env_file:
       - .env.production
     ports:
-      - "3001:3000"
+      - "5004:3000"
     volumes:
       - uploads_data:/app/public/uploads
     networks:

@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Required for self-hosted Docker deployments: Auth.js otherwise rejects requests
+  // whose Host header it doesn't already trust (it only trusts Vercel's by default),
+  // which surfaces to users as a generic "There is a problem with the server
+  // configuration" error page.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
