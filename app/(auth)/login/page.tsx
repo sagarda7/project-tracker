@@ -27,9 +27,9 @@ export default async function LoginPage({
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <LoginForm callbackUrl={callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard"} />
         </div>
-        <p className="mt-6 text-center text-xs text-gray-400">
+        {/* <p className="mt-6 text-center text-xs text-gray-400">
           Admin: admin@example.com / admin123 &middot; User: user@example.com / user123
-        </p>
+        </p> */}
       </div>
     </div>
   );

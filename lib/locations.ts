@@ -4,6 +4,8 @@
  * following the same shape — the rest of the app only depends on the `Province` type below.
  */
 
+import { Mada } from "next/font/google";
+
 export interface Municipality {
   name: string;
 }
@@ -101,6 +103,10 @@ export const NEPAL_LOCATIONS: Province[] = [
           { name: "Bharatpur Metropolitan City" },
           { name: "Ratnanagar Municipality" },
           { name: "Kalika Rural Municipality" },
+          { name: "Khairahani Municipality" },
+          { name: "Rapti Rural Municipality" },
+          { name: "Khairahani Municipality" },
+          { name: "Madi Municipality" },
         ],
       },
     ],
