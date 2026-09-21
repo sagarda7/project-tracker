@@ -33,32 +33,45 @@ logs-production: ## Follow the production container's logs.
 # --- Database (schema sync + seed) ---
 # The runtime image is intentionally slim (Next standalone output) and doesn't carry the
 # Prisma CLI. These targets build just the "builder" stage (which has it) into a
-# throwaway image and run a one-off `prisma` command against it on the shared network.
+# throwaway image and run a one-off `prisma`/seed command against it on the shared
+# network. `docker run --env-file` forwards every variable in the env file into the
+# container in one shot (SEED_ADMIN_*, DATABASE_URL, AUTH_SECRET, etc.) — note that
+# Docker's env-file parser does NOT strip quotes (unlike a shell), so values in these
+# files must be unquoted even if they contain spaces (e.g. SEED_ADMIN_NAME=System
+# Administrator, no quotes) or the quote characters end up literally in the value.
+#
+# SHARED_NETWORK_NAME still needs pulling out separately with grep/cut (not `source`,
+# which chokes on exactly those unquoted multi-word values) since --network is a
+# docker-run CLI flag that --env-file has no way to populate.
 
 .PHONY: db-push-production
 db-push-production: ## Sync the production DB schema (prisma db push, schema.mysql.prisma).
 	docker build --target builder -f docker/production/Dockerfile -t rspchitwan-prod-builder .
-	bash -c 'set -a; source docker/production/.env.production; set +a; \
-		docker run --rm --network "$$SHARED_NETWORK_NAME" -e DATABASE_URL="$$DATABASE_URL" \
-		rspchitwan-prod-builder npx prisma db push --schema=prisma/schema.mysql.prisma'
+	docker run --rm \
+		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/production/.env.production | cut -d= -f2-)" \
+		--env-file docker/production/.env.production \
+		rspchitwan-prod-builder npx prisma db push --schema=prisma/schema.mysql.prisma
 
 .PHONY: db-seed-production
 db-seed-production: ## Seed the production database (idempotent — safe to re-run).
 	docker build --target builder -f docker/production/Dockerfile -t rspchitwan-prod-builder .
-	bash -c 'set -a; source docker/production/.env.production; set +a; \
-		docker run --rm --network "$$SHARED_NETWORK_NAME" -e DATABASE_URL="$$DATABASE_URL" \
-		rspchitwan-prod-builder npx tsx prisma/seed.ts'
+	docker run --rm \
+		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/production/.env.production | cut -d= -f2-)" \
+		--env-file docker/production/.env.production \
+		rspchitwan-prod-builder npx tsx prisma/seed.ts
 
 .PHONY: db-push-staging
 db-push-staging: ## Sync the staging DB schema (prisma db push, schema.mysql.prisma).
 	docker build --target builder -f docker/staging/Dockerfile -t rspchitwan-staging-builder .
-	bash -c 'set -a; source docker/staging/.env.staging; set +a; \
-		docker run --rm --network "$$SHARED_NETWORK_NAME" -e DATABASE_URL="$$DATABASE_URL" \
-		rspchitwan-staging-builder npx prisma db push --schema=prisma/schema.mysql.prisma'
+	docker run --rm \
+		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/staging/.env.staging | cut -d= -f2-)" \
+		--env-file docker/staging/.env.staging \
+		rspchitwan-staging-builder npx prisma db push --schema=prisma/schema.mysql.prisma
 
 .PHONY: db-seed-staging
 db-seed-staging: ## Seed the staging database (idempotent — safe to re-run).
 	docker build --target builder -f docker/staging/Dockerfile -t rspchitwan-staging-builder .
-	bash -c 'set -a; source docker/staging/.env.staging; set +a; \
-		docker run --rm --network "$$SHARED_NETWORK_NAME" -e DATABASE_URL="$$DATABASE_URL" \
-		rspchitwan-staging-builder npx tsx prisma/seed.ts'
+	docker run --rm \
+		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/staging/.env.staging | cut -d= -f2-)" \
+		--env-file docker/staging/.env.staging \
+		rspchitwan-staging-builder npx tsx prisma/seed.ts
