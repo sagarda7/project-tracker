@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "db:generate:mysql": "prisma generate --schema=prisma/schema.mysql.prisma",
     "db:push:mysql": "prisma db push --schema=prisma/schema.mysql.prisma",
-    "db:studio:mysql": "prisma studio --schema=prisma/schema.mysql.prisma"
+    "db:studio:mysql": "prisma studio --schema=prisma/schema.mysql.prisma",
+    "vercel-build": "if [ \"$RUN_DB_PUSH\" = \"true\" ]; then npx prisma db push --schema=prisma/schema.mysql.prisma; fi && if [ \"$RUN_DB_SEED\" = \"true\" ]; then npx tsx prisma/seed.ts; fi && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
