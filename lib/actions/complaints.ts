@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-helpers";
 import { storage } from "@/lib/storage";
 import { generateTrackingCode } from "@/lib/tracking-code";
+import { generateMathCaptcha, verifyMathCaptcha, MathCaptcha } from "@/lib/captcha";
 import {
   complaintSchema,
   trackCodeSchema,
@@ -30,6 +31,7 @@ function parseComplaintFormData(formData: FormData) {
     municipality: formData.get("municipality") ?? "",
     ward: formData.get("ward") ?? "",
     addressDetail: formData.get("addressDetail") ?? "",
+    captchaAnswer: formData.get("captchaAnswer") ?? "",
   });
 }
 
@@ -63,10 +65,23 @@ async function saveAttachments(
   return saved;
 }
 
+export async function getMathCaptchaAction(): Promise<MathCaptcha> {
+  return generateMathCaptcha();
+}
+
 export async function submitComplaintAction(
   formData: FormData
 ): Promise<ActionResult<{ trackingCode: string }>> {
   try {
+    const captchaA = Number(formData.get("captchaA"));
+    const captchaB = Number(formData.get("captchaB"));
+    const captchaToken = String(formData.get("captchaToken") ?? "");
+    const captchaAnswer = Number(formData.get("captchaAnswer"));
+
+    if (!verifyMathCaptcha(captchaA, captchaB, captchaToken, captchaAnswer)) {
+      return { success: false, error: "पुष्टिकरणको उत्तर मिलेन। कृपया फेरि प्रयास गर्नुहोस्।" };
+    }
+
     const parsed = parseComplaintFormData(formData);
     const photoAttachments = await saveAttachments(formData, "photos");
     const documentAttachments = await saveAttachments(formData, "documents");
@@ -102,7 +117,10 @@ export async function submitComplaintAction(
   }
 }
 
-export async function trackComplaintAction(code: string): Promise<
+export async function trackComplaintAction(
+  code: string,
+  captcha: { a: number; b: number; token: string; answer: number }
+): Promise<
   ActionResult<{
     trackingCode: string;
     status: ComplaintStatus;
@@ -113,6 +131,10 @@ export async function trackComplaintAction(code: string): Promise<
   }>
 > {
   try {
+    if (!verifyMathCaptcha(captcha.a, captcha.b, captcha.token, captcha.answer)) {
+      return { success: false, error: "पुष्टिकरणको उत्तर मिलेन। कृपया फेरि प्रयास गर्नुहोस्।" };
+    }
+
     const parsed = trackCodeSchema.parse({ code });
 
     const complaint = await prisma.complaint.findUnique({

@@ -1,6 +1,9 @@
 import { ComplaintForm } from "@/components/public/complaint-form";
+import { generateMathCaptcha } from "@/lib/captcha";
 
 export default function GunasoPage() {
+  const initialCaptcha = generateMathCaptcha();
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
       <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">गुनासो दर्ता गर्नुहोस्</h1>
@@ -8,7 +11,7 @@ export default function GunasoPage() {
         कृपया तलको फारम भरेर आफ्नो गुनासो पेश गर्नुहोस्। सबमिट गरेपछि तपाईंलाई एउटा ट्र्याकिङ कोड दिइनेछ।
       </p>
       <div className="mt-8">
-        <ComplaintForm />
+        <ComplaintForm initialCaptcha={initialCaptcha} />
       </div>
     </div>
   );

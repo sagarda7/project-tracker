@@ -12,6 +12,11 @@ export const complaintSchema = z.object({
   municipality: z.string().trim().min(1, "Municipality/VDC is required"),
   ward: z.string().trim().min(1, "Ward is required"),
   addressDetail: z.string().trim().optional().or(z.literal("")),
+  captchaAnswer: z
+    .string()
+    .trim()
+    .min(1, "कृपया जवाफ प्रविष्ट गर्नुहोस्")
+    .refine((v) => !Number.isNaN(Number(v)), "मान्य संख्या प्रविष्ट गर्नुहोस्"),
 });
 
 export type ComplaintFormValues = z.infer<typeof complaintSchema>;

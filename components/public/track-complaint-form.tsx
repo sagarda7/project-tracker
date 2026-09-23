@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { ComplaintStatus } from "@prisma/client";
-import { trackComplaintAction } from "@/lib/actions/complaints";
+import { trackComplaintAction, getMathCaptchaAction } from "@/lib/actions/complaints";
+import type { MathCaptcha } from "@/lib/captcha";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { COMPLAINT_STATUS_BADGE_CLASSES, COMPLAINT_STATUS_LABELS_NE } from "@/lib/constants";
@@ -18,21 +19,38 @@ interface TrackResult {
   notes: { id: string; note: string; createdAt: Date }[];
 }
 
-export function TrackComplaintForm() {
+export function TrackComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha }) {
   const [code, setCode] = useState("");
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [captcha, setCaptcha] = useState<MathCaptcha>(initialCaptcha);
+  const [refreshingCaptcha, setRefreshingCaptcha] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TrackResult | null>(null);
+
+  async function refreshCaptcha() {
+    setRefreshingCaptcha(true);
+    const next = await getMathCaptchaAction();
+    setCaptcha(next);
+    setCaptchaAnswer("");
+    setRefreshingCaptcha(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setResult(null);
     setLoading(true);
-    const response = await trackComplaintAction(code);
+    const response = await trackComplaintAction(code, {
+      a: captcha.a,
+      b: captcha.b,
+      token: captcha.token,
+      answer: Number(captchaAnswer),
+    });
     setLoading(false);
     if (!response.success) {
       setError(response.error);
+      await refreshCaptcha();
       return;
     }
     setResult(response.data);
@@ -40,22 +58,50 @@ export function TrackComplaintForm() {
 
   return (
     <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex-1">
-          <Label htmlFor="code">ट्र्याकिङ कोड</Label>
-          <Input
-            id="code"
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            maxLength={5}
-            placeholder="जस्तै: A7K3M"
-            className="uppercase tracking-widest"
-          />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Label htmlFor="code">ट्र्याकिङ कोड</Label>
+            <Input
+              id="code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              maxLength={5}
+              placeholder="जस्तै: A7K3M"
+              className="uppercase tracking-widest"
+            />
+          </div>
+          <div>
+            <Label htmlFor="trackCaptchaAnswer" required>
+              {captcha.a} + {captcha.b} = ?
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="trackCaptchaAnswer"
+                inputMode="numeric"
+                className="max-w-35"
+                value={captchaAnswer}
+                onChange={(e) => setCaptchaAnswer(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={refreshCaptcha}
+                disabled={refreshingCaptcha}
+                className="rounded-md border border-gray-300 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                aria-label="नयाँ प्रश्न ल्याउनुहोस्"
+                title="नयाँ प्रश्न ल्याउनुहोस्"
+              >
+                <RefreshCw className={refreshingCaptcha ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              </button>
+            </div>
+          </div>
         </div>
-        <Button type="submit" loading={loading} className="rounded-full sm:w-auto">
-          <Search className="h-4 w-4" />
-          हेर्नुहोस्
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" loading={loading} className="rounded-full sm:w-auto">
+            <Search className="h-4 w-4" />
+            हेर्नुहोस्
+          </Button>
+        </div>
       </form>
 
       {error && (

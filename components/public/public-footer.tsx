@@ -11,7 +11,7 @@ export function PublicFooter() {
             rel="noopener noreferrer"
             className="font-medium text-primary hover:underline"
           >
-            Sagar Devkota
+            TechAsdy
           </a>
         </p>
       </div>

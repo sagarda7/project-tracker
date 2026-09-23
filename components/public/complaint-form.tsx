@@ -3,9 +3,10 @@
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Copy, Check, FileText, ImagePlus, Paperclip, X } from "lucide-react";
+import { Copy, Check, FileText, ImagePlus, Paperclip, RefreshCw, X } from "lucide-react";
 import { complaintSchema, ComplaintFormValues } from "@/lib/validations/complaint";
-import { submitComplaintAction } from "@/lib/actions/complaints";
+import { submitComplaintAction, getMathCaptchaAction } from "@/lib/actions/complaints";
+import type { MathCaptcha } from "@/lib/captcha";
 import { Input, Label, FieldError, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LocationSelect } from "@/components/projects/location-select";
@@ -16,13 +17,15 @@ import {
   MAX_DOCUMENT_SIZE_BYTES,
 } from "@/lib/constants";
 
-export function ComplaintForm() {
+export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [documents, setDocuments] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [captcha, setCaptcha] = useState<MathCaptcha>(initialCaptcha);
+  const [refreshingCaptcha, setRefreshingCaptcha] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +34,7 @@ export function ComplaintForm() {
     handleSubmit,
     setValue,
     watch,
+    resetField,
     formState: { errors, isSubmitting },
   } = useForm<ComplaintFormValues>({
     resolver: zodResolver(complaintSchema),
@@ -43,8 +47,17 @@ export function ComplaintForm() {
       municipality: "",
       ward: "",
       addressDetail: "",
+      captchaAnswer: "",
     },
   });
+
+  async function refreshCaptcha() {
+    setRefreshingCaptcha(true);
+    const next = await getMathCaptchaAction();
+    setCaptcha(next);
+    resetField("captchaAnswer");
+    setRefreshingCaptcha(false);
+  }
 
   const province = watch("province");
   const district = watch("district");
@@ -93,12 +106,17 @@ export function ComplaintForm() {
     formData.set("municipality", values.municipality);
     formData.set("ward", values.ward);
     formData.set("addressDetail", values.addressDetail ?? "");
+    formData.set("captchaA", String(captcha.a));
+    formData.set("captchaB", String(captcha.b));
+    formData.set("captchaToken", captcha.token);
+    formData.set("captchaAnswer", values.captchaAnswer);
     photos.forEach((file) => formData.append("photos", file));
     documents.forEach((file) => formData.append("documents", file));
 
     const result = await submitComplaintAction(formData);
     if (!result.success) {
       setServerError(result.error);
+      await refreshCaptcha();
       return;
     }
     setTrackingCode(result.data.trackingCode);
@@ -287,6 +305,34 @@ export function ComplaintForm() {
               ))}
             </ul>
           )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="border-b border-gray-200 pb-2 text-sm font-semibold text-gray-900">पुष्टिकरण</h2>
+        <div>
+          <Label htmlFor="captchaAnswer" required>
+            {captcha.a} + {captcha.b} = ?
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="captchaAnswer"
+              inputMode="numeric"
+              className="max-w-35"
+              {...register("captchaAnswer")}
+            />
+            <button
+              type="button"
+              onClick={refreshCaptcha}
+              disabled={refreshingCaptcha}
+              className="rounded-md border border-gray-300 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+              aria-label="नयाँ प्रश्न ल्याउनुहोस्"
+              title="नयाँ प्रश्न ल्याउनुहोस्"
+            >
+              <RefreshCw className={refreshingCaptcha ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+            </button>
+          </div>
+          <FieldError message={errors.captchaAnswer?.message} />
         </div>
       </div>
 
