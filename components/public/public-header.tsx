@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { href: "/contact", label: "सम्पर्क" },
 ];
 
-const CONTACT_PHONE = "०१-४०००००१";
+const CONTACT_PHONE = "9855061243";
 const CONTACT_EMAIL = "support@rspchitwan.org";
 
 export function PublicHeader() {
@@ -71,7 +71,7 @@ export function PublicHeader() {
               गुनासो दर्ता गर्नुहोस्
             </Link>
             <Link href="/login" className="text-sm font-medium text-gray-400 hover:text-gray-600">
-              स्टाफ लगइन
+              लगइन
             </Link>
           </div>
 
