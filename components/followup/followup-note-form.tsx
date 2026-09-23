@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/providers/toast-provider";
 import { useTranslations } from "@/components/providers/i18n-provider";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from "@/lib/constants";
 import { publicUrl } from "@/lib/storage-url";
 
 export function FollowupNoteForm({
@@ -61,7 +61,7 @@ export function FollowupNoteForm({
       return;
     }
     if (selected.size > MAX_IMAGE_SIZE_BYTES) {
-      setFileError("Image must be smaller than 5MB.");
+      setFileError(`Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB.`);
       return;
     }
     setFile(selected);
@@ -76,20 +76,26 @@ export function FollowupNoteForm({
     if (file) formData.set("proofImage", file);
     if (removeExisting) formData.set("removeProofImage", "true");
 
-    const result = note
-      ? await updateFollowupNoteAction(note.id, formData)
-      : await createFollowupNoteAction(projectId, formData);
+    try {
+      const result = note
+        ? await updateFollowupNoteAction(note.id, formData)
+        : await createFollowupNoteAction(projectId, formData);
 
-    if (!result.success) {
-      setServerError(result.error);
-      return;
+      if (!result.success) {
+        setServerError(result.error);
+        return;
+      }
+
+      toast(note ? "Note updated" : "Note added");
+      reset();
+      setFile(null);
+      onClose();
+      router.refresh();
+    } catch {
+      // The server action call itself can throw before our own error handling runs
+      // (e.g. a request-too-large rejection at the framework level).
+      setServerError("Upload failed. Please try again.");
     }
-
-    toast(note ? "Note updated" : "Note added");
-    reset();
-    setFile(null);
-    onClose();
-    router.refresh();
   }
 
   return (

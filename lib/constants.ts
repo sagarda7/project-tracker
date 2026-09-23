@@ -52,10 +52,14 @@ export const ROLES: Role[] = ["ADMIN", "USER"];
 
 export const LANGUAGES: Language[] = ["EN", "NE"];
 
-export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+// Kept well under Next's Server Action body limit (see next.config.ts) even when a
+// few files are attached at once — bump both together if you raise one.
+export const MAX_IMAGE_SIZE_MB = 2;
+export const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_DOCUMENT_SIZE_MB = 2;
+export const MAX_DOCUMENT_SIZE_BYTES = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
 export const ALLOWED_DOCUMENT_TYPES = [
   "image/jpeg",
   "image/png",
@@ -64,6 +68,13 @@ export const ALLOWED_DOCUMENT_TYPES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+
+// A complaint can attach several photos/documents at once, each under its own 2MB cap,
+// but the combined request still has to fit Next's Server Action body limit (see
+// next.config.ts, currently 15mb) alongside the other form fields — checked client-side
+// before submitting so this shows as a normal validation message, not a crash.
+export const MAX_TOTAL_ATTACHMENTS_MB = 12;
+export const MAX_TOTAL_ATTACHMENTS_BYTES = MAX_TOTAL_ATTACHMENTS_MB * 1024 * 1024;
 
 export const PAGE_SIZE = 10;
 

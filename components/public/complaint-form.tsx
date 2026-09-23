@@ -13,8 +13,12 @@ import { LocationSelect } from "@/components/projects/location-select";
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
   ALLOWED_DOCUMENT_TYPES,
   MAX_DOCUMENT_SIZE_BYTES,
+  MAX_DOCUMENT_SIZE_MB,
+  MAX_TOTAL_ATTACHMENTS_BYTES,
+  MAX_TOTAL_ATTACHMENTS_MB,
 } from "@/lib/constants";
 
 export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha }) {
@@ -63,6 +67,10 @@ export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha 
   const district = watch("district");
   const municipality = watch("municipality");
 
+  function totalAttachmentsSize(extra: File[] = []) {
+    return [...photos, ...documents, ...extra].reduce((sum, f) => sum + f.size, 0);
+  }
+
   function addPhotos(fileList: FileList | null) {
     setFileError(null);
     if (!fileList) return;
@@ -72,7 +80,11 @@ export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha 
         continue;
       }
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setFileError(`"${file.name}" फाइल साइज धेरै ठूलो छ (अधिकतम 5MB)।`);
+        setFileError(`"${file.name}" फाइल साइज धेरै ठूलो छ (अधिकतम ${MAX_IMAGE_SIZE_MB}MB)।`);
+        continue;
+      }
+      if (totalAttachmentsSize([file]) > MAX_TOTAL_ATTACHMENTS_BYTES) {
+        setFileError(`सबै संलग्न फाइलहरूको कुल साइज ${MAX_TOTAL_ATTACHMENTS_MB}MB भन्दा बढी हुन सक्दैन।`);
         continue;
       }
       setPhotos((prev) => [...prev, file]);
@@ -88,7 +100,11 @@ export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha 
         continue;
       }
       if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
-        setFileError(`"${file.name}" फाइल साइज धेरै ठूलो छ (अधिकतम 10MB)।`);
+        setFileError(`"${file.name}" फाइल साइज धेरै ठूलो छ (अधिकतम ${MAX_DOCUMENT_SIZE_MB}MB)।`);
+        continue;
+      }
+      if (totalAttachmentsSize([file]) > MAX_TOTAL_ATTACHMENTS_BYTES) {
+        setFileError(`सबै संलग्न फाइलहरूको कुल साइज ${MAX_TOTAL_ATTACHMENTS_MB}MB भन्दा बढी हुन सक्दैन।`);
         continue;
       }
       setDocuments((prev) => [...prev, file]);
@@ -97,6 +113,12 @@ export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha 
 
   async function onSubmit(values: ComplaintFormValues) {
     setServerError(null);
+
+    if (totalAttachmentsSize() > MAX_TOTAL_ATTACHMENTS_BYTES) {
+      setFileError(`सबै संलग्न फाइलहरूको कुल साइज ${MAX_TOTAL_ATTACHMENTS_MB}MB भन्दा बढी हुन सक्दैन।`);
+      return;
+    }
+
     const formData = new FormData();
     formData.set("name", values.name);
     formData.set("phone", values.phone ?? "");
@@ -113,13 +135,22 @@ export function ComplaintForm({ initialCaptcha }: { initialCaptcha: MathCaptcha 
     photos.forEach((file) => formData.append("photos", file));
     documents.forEach((file) => formData.append("documents", file));
 
-    const result = await submitComplaintAction(formData);
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await submitComplaintAction(formData);
+      if (!result.success) {
+        setServerError(result.error);
+        await refreshCaptcha();
+        return;
+      }
+      setTrackingCode(result.data.trackingCode);
+    } catch {
+      // The server action call itself can throw (e.g. a request-too-large rejection at
+      // the framework level, or a network drop) before our own error handling ever runs.
+      setServerError(
+        "अपलोड असफल भयो। संलग्न फाइलहरूको कुल साइज घटाएर फेरि प्रयास गर्नुहोस्, वा पछि पुन: प्रयास गर्नुहोस्।"
+      );
       await refreshCaptcha();
-      return;
     }
-    setTrackingCode(result.data.trackingCode);
   }
 
   if (trackingCode) {

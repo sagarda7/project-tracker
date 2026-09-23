@@ -9,7 +9,7 @@ import { Input, Label } from "@/components/ui/input";
 import { useToast } from "@/components/providers/toast-provider";
 import { useTranslations } from "@/components/providers/i18n-provider";
 import { addProjectImageAction } from "@/lib/actions/project-images";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from "@/lib/constants";
 
 export function ImageUploader({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
@@ -42,7 +42,7 @@ export function ImageUploader({ projectId }: { projectId: string }) {
       return;
     }
     if (selected.size > MAX_IMAGE_SIZE_BYTES) {
-      setError("Image must be smaller than 5MB.");
+      setError(`Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB.`);
       return;
     }
     setFile(selected);
@@ -60,17 +60,23 @@ export function ImageUploader({ projectId }: { projectId: string }) {
     formData.set("file", file);
     formData.set("caption", caption);
 
-    const result = await addProjectImageAction(projectId, formData);
-    setUploading(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
+    try {
+      const result = await addProjectImageAction(projectId, formData);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      toast(t("projects.addImage") + " ✓");
+      setOpen(false);
+      reset();
+      router.refresh();
+    } catch {
+      // The server action call itself can throw before our own error handling runs
+      // (e.g. a request-too-large rejection at the framework level).
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
-    toast(t("projects.addImage") + " ✓");
-    setOpen(false);
-    reset();
-    router.refresh();
   }
 
   return (
@@ -115,7 +121,7 @@ export function ImageUploader({ projectId }: { projectId: string }) {
               className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 text-gray-400 hover:border-primary hover:text-primary"
             >
               <Upload className="h-8 w-8" />
-              <span className="text-sm">Click to select an image (JPEG, PNG, WEBP, max 5MB)</span>
+              <span className="text-sm">Click to select an image (JPEG, PNG, WEBP, max {MAX_IMAGE_SIZE_MB}MB)</span>
             </button>
           )}
           <input

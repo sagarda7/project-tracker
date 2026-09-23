@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-helpers";
 import { storage } from "@/lib/storage";
 import { followupNoteSchema } from "@/lib/validations/followup";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from "@/lib/constants";
 import { actionError, ActionResult } from "@/lib/action-utils";
 
 function parseFollowupFormData(formData: FormData) {
@@ -24,7 +24,7 @@ async function saveProofImageIfPresent(formData: FormData): Promise<string | nul
     throw new Error("Only JPEG, PNG, and WEBP images are allowed.");
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    throw new Error("Image must be smaller than 5MB.");
+    throw new Error(`Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB.`);
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

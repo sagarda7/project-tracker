@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-helpers";
 import { storage } from "@/lib/storage";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from "@/lib/constants";
 import { actionError, ActionResult } from "@/lib/action-utils";
 
 function validateImageFile(file: File): string | null {
@@ -12,7 +12,7 @@ function validateImageFile(file: File): string | null {
     return "Only JPEG, PNG, and WEBP images are allowed.";
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return "Image must be smaller than 5MB.";
+    return `Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB.`;
   }
   return null;
 }
