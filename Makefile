@@ -40,37 +40,49 @@ logs-production: ## Follow the production container's logs.
 # files must be unquoted even if they contain spaces (e.g. SEED_ADMIN_NAME=System
 # Administrator, no quotes) or the quote characters end up literally in the value.
 #
-# SHARED_NETWORK_NAME still needs pulling out separately with grep/cut (not `source`,
-# which chokes on exactly those unquoted multi-word values) since --network is a
-# docker-run CLI flag that --env-file has no way to populate.
+# SHARED_NETWORK_NAME and DB_PROVIDER still need pulling out separately with grep/cut
+# (not `source`, which chokes on exactly those unquoted multi-word values): --network is
+# a docker-run CLI flag that --env-file has no way to populate, and DB_PROVIDER has to
+# pick the schema file and get passed as a --build-arg before the container even exists.
+# DB_PROVIDER defaults to mysql if unset, matching the Dockerfile's own ARG default.
 
 .PHONY: db-push-production
-db-push-production: ## Sync the production DB schema (prisma db push, schema.mysql.prisma).
-	docker build --target builder -f docker/production/Dockerfile -t rspchitwan-prod-builder .
+db-push-production: ## Sync the production DB schema (prisma db push; mysql or postgres, per DB_PROVIDER).
+	@DB_PROVIDER="$$(grep '^DB_PROVIDER=' docker/production/.env.production | cut -d= -f2-)"; \
+	DB_PROVIDER="$${DB_PROVIDER:-mysql}"; \
+	if [ "$$DB_PROVIDER" = "postgres" ]; then SCHEMA=prisma/schema.postgres.prisma; else SCHEMA=prisma/schema.mysql.prisma; fi; \
+	docker build --target builder --build-arg DB_PROVIDER="$$DB_PROVIDER" -f docker/production/Dockerfile -t rspchitwan-prod-builder . && \
 	docker run --rm \
 		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/production/.env.production | cut -d= -f2-)" \
 		--env-file docker/production/.env.production \
-		rspchitwan-prod-builder npx prisma db push --schema=prisma/schema.mysql.prisma
+		rspchitwan-prod-builder npx prisma db push --schema=$$SCHEMA
 
 .PHONY: db-seed-production
 db-seed-production: ## Seed the production database (idempotent — safe to re-run).
-	docker build --target builder -f docker/production/Dockerfile -t rspchitwan-prod-builder .
+	@DB_PROVIDER="$$(grep '^DB_PROVIDER=' docker/production/.env.production | cut -d= -f2-)"; \
+	DB_PROVIDER="$${DB_PROVIDER:-mysql}"; \
+	docker build --target builder --build-arg DB_PROVIDER="$$DB_PROVIDER" -f docker/production/Dockerfile -t rspchitwan-prod-builder . && \
 	docker run --rm \
 		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/production/.env.production | cut -d= -f2-)" \
 		--env-file docker/production/.env.production \
 		rspchitwan-prod-builder npx tsx prisma/seed.ts
 
 .PHONY: db-push-staging
-db-push-staging: ## Sync the staging DB schema (prisma db push, schema.mysql.prisma).
-	docker build --target builder -f docker/staging/Dockerfile -t rspchitwan-staging-builder .
+db-push-staging: ## Sync the staging DB schema (prisma db push; mysql or postgres, per DB_PROVIDER).
+	@DB_PROVIDER="$$(grep '^DB_PROVIDER=' docker/staging/.env.staging | cut -d= -f2-)"; \
+	DB_PROVIDER="$${DB_PROVIDER:-mysql}"; \
+	if [ "$$DB_PROVIDER" = "postgres" ]; then SCHEMA=prisma/schema.postgres.prisma; else SCHEMA=prisma/schema.mysql.prisma; fi; \
+	docker build --target builder --build-arg DB_PROVIDER="$$DB_PROVIDER" -f docker/staging/Dockerfile -t rspchitwan-staging-builder . && \
 	docker run --rm \
 		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/staging/.env.staging | cut -d= -f2-)" \
 		--env-file docker/staging/.env.staging \
-		rspchitwan-staging-builder npx prisma db push --schema=prisma/schema.mysql.prisma
+		rspchitwan-staging-builder npx prisma db push --schema=$$SCHEMA
 
 .PHONY: db-seed-staging
 db-seed-staging: ## Seed the staging database (idempotent — safe to re-run).
-	docker build --target builder -f docker/staging/Dockerfile -t rspchitwan-staging-builder .
+	@DB_PROVIDER="$$(grep '^DB_PROVIDER=' docker/staging/.env.staging | cut -d= -f2-)"; \
+	DB_PROVIDER="$${DB_PROVIDER:-mysql}"; \
+	docker build --target builder --build-arg DB_PROVIDER="$$DB_PROVIDER" -f docker/staging/Dockerfile -t rspchitwan-staging-builder . && \
 	docker run --rm \
 		--network "$$(grep '^SHARED_NETWORK_NAME=' docker/staging/.env.staging | cut -d= -f2-)" \
 		--env-file docker/staging/.env.staging \

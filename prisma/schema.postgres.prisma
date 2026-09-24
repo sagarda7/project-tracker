@@ -1,0 +1,272 @@
+// Postgres schema (Vercel Postgres/Neon/Supabase/etc.). Used both by Vercel deployments and,
+// when DB_PROVIDER=postgres, by the Docker production/staging images (see docker/*/Dockerfile)
+// as an alternative to schema.mysql.prisma. Mirrors prisma/schema.prisma (SQLite, local dev) and
+// prisma/schema.mysql.prisma — keep all three in sync when models change. Prisma's datasource
+// `provider` must be a literal, so one schema file can't target multiple databases.
+
+generator client {
+  provider      = "prisma-client-js"
+  // "native" covers local use of this schema; rhel-openssl-3.0.x is what Vercel's serverless
+  // (AWS Lambda) runtime needs, linux-musl-openssl-3.0.x is what the Alpine-based Docker
+  // runtime (docker/production, docker/staging) needs when DB_PROVIDER=postgres there.
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Language {
+  EN
+  NE
+}
+
+enum ProjectStatus {
+  PLANNED
+  BID
+  STARTED
+  PROGRESS
+  HALTED
+  CANCELED
+  COMPLETED
+  HANDOVER
+}
+
+enum GoverningBody {
+  METROPOLITAN_CITY
+  SUB_METROPOLITAN_CITY
+  MUNICIPALITY
+  RURAL_MUNICIPALITY
+  URBAN_DEVELOPMENT
+  INFRASTRUCTURE_DEVELOPMENT
+  OTHER
+}
+
+enum ComplaintStatus {
+  PENDING
+  ACCEPTED
+  IN_ACTION
+  FORWARDED
+  RESOLVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String   @unique
+  phone     String?
+  passwordHash String
+  role      Role     @default(USER)
+  language  Language @default(EN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdProjects Project[]             @relation("ProjectCreatedBy")
+  followupNotes   ProjectFollowupNote[] @relation("NoteCreatedBy")
+  statusChanges   ProjectStatusHistory[] @relation("StatusChangedBy")
+  csvImports      CsvImportLog[]        @relation("ImportCreatedBy")
+  complaintNotes         ComplaintNote[]           @relation("ComplaintNoteCreatedBy")
+  complaintStatusChanges ComplaintStatusHistory[]  @relation("ComplaintStatusChangedBy")
+
+  @@index([email])
+  @@index([role])
+}
+
+model Contractor {
+  id            String   @id @default(cuid())
+  name          String
+  companyName   String?
+  phone         String
+  alternatePhone String?
+  email         String?
+  address       String?  @db.Text
+  contactPerson String?
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  projects Project[]
+
+  @@index([name])
+  @@index([phone])
+}
+
+model Project {
+  id                  String        @id @default(cuid())
+  name                String
+  province             String
+  district             String
+  municipality         String
+  ward                 String
+  locationDescription  String?       @db.Text
+  contractorId         String?
+  contractorName       String?
+  contractorPhone      String?
+  contactPersonName    String?
+  contactPersonPhone   String?
+  governingBody        GoverningBody
+  status               ProjectStatus @default(PLANNED)
+  budget               Float
+  startDate            DateTime?
+  deadline             DateTime?
+  description          String?       @db.Text
+
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  contractor      Contractor?             @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  createdBy       User                    @relation("ProjectCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  images          ProjectImage[]
+  followupNotes   ProjectFollowupNote[]
+  statusHistory   ProjectStatusHistory[]
+
+  @@index([name])
+  @@index([status])
+  @@index([province])
+  @@index([district])
+  @@index([deadline])
+  @@index([contractorId])
+}
+
+model ProjectImage {
+  id         String   @id @default(cuid())
+  projectId  String
+  fileName   String
+  filePath   String
+  mimeType   String
+  fileSize   Int
+  caption    String?
+  isMain     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectFollowupNote {
+  id               String   @id @default(cuid())
+  projectId        String
+  note             String    @db.Text
+  followupDate     DateTime?
+  proofImagePath   String?
+  externalLink     String?
+  createdById      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("NoteCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([followupDate])
+}
+
+model ProjectStatusHistory {
+  id            String        @id @default(cuid())
+  projectId     String
+  previousStatus ProjectStatus?
+  newStatus     ProjectStatus
+  changedById   String
+  comment       String?       @db.Text
+  changedAt     DateTime      @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  changedBy User    @relation("StatusChangedBy", fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([changedAt])
+}
+
+model CsvImportLog {
+  id            String   @id @default(cuid())
+  entityType    String
+  fileName      String
+  totalRows     Int
+  successCount  Int
+  errorCount    Int
+  errors        String?  @db.Text
+  createdById   String
+  createdAt     DateTime @default(now())
+
+  createdBy User @relation("ImportCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+model Complaint {
+  id            String          @id @default(cuid())
+  trackingCode  String          @unique
+  name          String
+  phone         String?
+  description   String          @db.Text
+  province      String
+  district      String
+  municipality  String
+  ward          String
+  addressDetail String?         @db.Text
+  status        ComplaintStatus @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  attachments   ComplaintAttachment[]
+  notes         ComplaintNote[]
+  statusHistory ComplaintStatusHistory[]
+
+  @@index([trackingCode])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ComplaintAttachment {
+  id          String   @id @default(cuid())
+  complaintId String
+  kind        String
+  fileName    String
+  filePath    String
+  mimeType    String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId])
+}
+
+model ComplaintNote {
+  id          String   @id @default(cuid())
+  complaintId String
+  note        String   @db.Text
+  createdById String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("ComplaintNoteCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([complaintId])
+}
+
+model ComplaintStatusHistory {
+  id             String           @id @default(cuid())
+  complaintId    String
+  previousStatus ComplaintStatus?
+  newStatus      ComplaintStatus
+  changedById    String
+  comment        String?          @db.Text
+  changedAt      DateTime         @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  changedBy User      @relation("ComplaintStatusChangedBy", fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([complaintId])
+  @@index([changedAt])
+}

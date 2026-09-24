@@ -14,8 +14,16 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Production always talks to MySQL — generate the MySQL-flavored client before building.
-RUN npx prisma generate --schema=prisma/schema.mysql.prisma
+# DB_PROVIDER selects which datasource this image is built against — "mysql" (default,
+# talks to the shared MariaDB stack) or "postgres" (e.g. Supabase). It's a build ARG, not
+# a runtime env var, because the Prisma client is generated and baked in at build time here.
+# Set via DB_PROVIDER in .env.production — see docker-compose.yml's build.args.
+ARG DB_PROVIDER=mysql
+RUN if [ "$DB_PROVIDER" = "postgres" ]; then \
+      npx prisma generate --schema=prisma/schema.postgres.prisma; \
+    else \
+      npx prisma generate --schema=prisma/schema.mysql.prisma; \
+    fi
 RUN npm run build
 
 # 3. Production image, copy all the files and run next

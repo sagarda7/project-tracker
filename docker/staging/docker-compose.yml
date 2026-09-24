@@ -5,6 +5,8 @@ services:
     build:
       context: ../../
       dockerfile: docker/staging/Dockerfile
+      args:
+        DB_PROVIDER: ${DB_PROVIDER:-mysql}
     image: rspchitwan-staging
     container_name: rspchitwan_staging
     restart: unless-stopped

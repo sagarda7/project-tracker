@@ -5,6 +5,8 @@ services:
     build:
       context: ../../
       dockerfile: docker/production/Dockerfile
+      args:
+        DB_PROVIDER: ${DB_PROVIDER:-mysql}
     image: rspchitwan-prod
     container_name: rspchitwan_prod
     restart: unless-stopped
