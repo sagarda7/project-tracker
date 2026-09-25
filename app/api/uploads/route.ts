@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   const src = request.nextUrl.searchParams.get("src");
-  if (!src || !/^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//.test(src)) {
+  if (!src || !/^https:\/\/[a-z0-9-]+\.(?:public|private)\.blob\.vercel-storage\.com\//.test(src)) {
     return NextResponse.json({ error: "Invalid src" }, { status: 400 });
   }
 

@@ -55,10 +55,12 @@ class VercelBlobStorageProvider implements StorageProvider {
       access: "private",
       addRandomSuffix: false,
     });
-    // Blob URLs are already absolute and permanent — stored as-is in the DB and returned
-    // unchanged by publicUrl() (see lib/storage-url.ts), unlike LocalStorageProvider's
-    // relative "folder/file" key.
-    return { url: blob.url, key: blob.url };
+    // For a private store, blob.url comes back with a time-limited
+    // vercel-blob-delegation/vercel-blob-signature query string attached. We don't need it —
+    // app/api/uploads re-authenticates on every read via get()/BLOB_READ_WRITE_TOKEN — and
+    // storing it would leave an already-expiring-looking signature baked into the DB forever.
+    const url = `${new URL(blob.url).origin}${new URL(blob.url).pathname}`;
+    return { url, key: url };
   }
 
   async remove(key: string): Promise<void> {
