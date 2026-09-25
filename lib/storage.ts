@@ -52,7 +52,7 @@ class VercelBlobStorageProvider implements StorageProvider {
     const ext = path.extname(originalName).toLowerCase() || "";
     const fileName = `${crypto.randomUUID()}${ext}`;
     const blob = await put(`${folder}/${fileName}`, buffer, {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
     });
     // Blob URLs are already absolute and permanent — stored as-is in the DB and returned
