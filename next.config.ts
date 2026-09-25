@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  images: {
+    // Lets next/image render project photos uploaded via Vercel Blob (see lib/storage.ts) —
+    // those are absolute https URLs, unlike the same-origin /uploads/... paths local storage
+    // produces, which next/image allows without any config.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
+  },
   experimental: {
     serverActions: {
       // Next's default is 1MB, well under our own per-file limits (see lib/constants.ts),
