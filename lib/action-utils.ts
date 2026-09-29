@@ -10,9 +10,14 @@ export function actionError(e: unknown): ActionResult<never> {
     return { success: false, error: e.message };
   }
   if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+    // P2003 fires both when a delete is blocked by a still-referencing record (e.g.
+    // deleting a user who created projects) AND when a write references an id that no
+    // longer exists — phrasing this as "cannot be removed" would be wrong for the latter.
     return {
       success: false,
-      error: "This record cannot be removed because other records still reference it.",
+      error:
+        "This action failed because it references a related record that no longer exists, " +
+        "or that record still has other data depending on it. Please refresh and try again.",
     };
   }
   if (e instanceof Error) {
