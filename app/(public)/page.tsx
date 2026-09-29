@@ -41,19 +41,19 @@ export default function PublicHomePage() {
                 निर्माण आयोजनासँग सम्बन्धित कुनै समस्या वा गुनासो छ भने सजिलैसँग अनलाइन दर्ता गर्नुहोस् र
                 ट्र्याकिङ कोडको माध्यमबाट यसको प्रगति हेर्नुहोस्।
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 flex gap-3">
                 <Link
                   href="/gunaso"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-medium text-white hover:bg-primary-hover sm:flex-none sm:px-6"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 shrink-0" />
                   गुनासो दर्ता गर्नुहोस्
                 </Link>
                 <Link
                   href="/gunaso/track"
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:flex-none sm:px-6"
                 >
-                  <Search className="h-4 w-4" />
+                  <Search className="h-4 w-4 shrink-0" />
                   गुनासो ट्र्याक गर्नुहोस्
                 </Link>
               </div>
